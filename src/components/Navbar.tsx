@@ -19,6 +19,11 @@ const Navbar = () => {
   }, []);
 
   const navigate = useNavigate();
+  const [activeNav, setActiveNav] = useState<'home' | 'category' | 'collection'>(() => {
+    if (location.pathname === '/collections') return 'collection';
+    if (location.pathname === '/') return 'home';
+    return 'home';
+  });
 
   const scrollOrNavigate = (target: 'top' | 'category' | 'collection') => {
     const doScroll = () => {
@@ -28,6 +33,11 @@ const Navbar = () => {
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       else window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
+    // mark selected immediately so underline updates on click
+    if (target === 'top') setActiveNav('home');
+    if (target === 'category') setActiveNav('category');
+    if (target === 'collection') setActiveNav('collection');
 
     if (location.pathname === '/') {
       doScroll();
@@ -42,9 +52,9 @@ const Navbar = () => {
         
         {/* Left Links */}
         <div className="nav-links">
-          <button type="button" className={`nav-link ${location.pathname === '/' ? 'nav-link-active' : ''}`} onClick={() => scrollOrNavigate('top')}>Home</button>
-          <button type="button" className={`nav-link ${location.pathname === '/' ? 'nav-link-active' : ''}`} onClick={() => scrollOrNavigate('category')}>Category</button>
-          <button type="button" className={`nav-link ${location.pathname === '/' ? 'nav-link-active' : ''}`} onClick={() => scrollOrNavigate('collection')}>Collection</button>
+          <button type="button" className={`nav-link ${activeNav === 'home' ? 'nav-link-active' : ''}`} onClick={() => scrollOrNavigate('top')}>Home</button>
+          <button type="button" className={`nav-link ${activeNav === 'category' ? 'nav-link-active' : ''}`} onClick={() => scrollOrNavigate('category')}>Category</button>
+          <button type="button" className={`nav-link ${activeNav === 'collection' ? 'nav-link-active' : ''}`} onClick={() => scrollOrNavigate('collection')}>Collection</button>
         </div>
 
         {/* Center Brand */}

@@ -1,8 +1,29 @@
-// Prefer explicit env var `VITE_API_BASE_URL` (set this in Cloudflare/Pages or your dev env).
-// If not set, use localhost for local development, otherwise default to the Render backend URL.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? (typeof window !== 'undefined' && window.location.hostname === 'localhost'
-  ? 'http://localhost:5000/api/sb'
-  : 'https://backend-4ry8.onrender.com/api/sb');
+// Prefer explicit env var `VITE_API_BASE_URL` (set this in Pages/Render or your dev env).
+// Fallback rules:
+// - If running on `localhost` or `127.*` use local backend `http://localhost:5000/api/sb`
+// - If running on the Pages domain (e.g. `etilekha.pages.dev`) use the Render backend
+// - Otherwise default to Render backend. You can still override with `VITE_API_BASE_URL`.
+const API_BASE_URL = (() => {
+  const env = import.meta.env.VITE_API_BASE_URL;
+  if (env) return env;
+  if (typeof window === 'undefined') return 'https://backend-4ry8.onrender.com/api/sb';
+  const host = window.location.hostname || '';
+  if (host === 'localhost' || host.startsWith('127.')) return 'http://localhost:5000/api/sb';
+  if (host === 'etilekha.pages.dev' || host.endsWith('.pages.dev')) return 'https://backend-4ry8.onrender.com/api/sb';
+  return 'https://backend-4ry8.onrender.com/api/sb';
+})();
+
+// Runtime debug: expose and log chosen API base for easier diagnosis
+if (typeof window !== 'undefined') {
+  try {
+    // eslint-disable-next-line no-console
+    console.info('[api] API_BASE_URL ->', API_BASE_URL);
+    // expose for quick inspection in console
+    (window as any).__API_BASE_URL__ = API_BASE_URL;
+  } catch (e) {
+    // ignore
+  }
+}
 
 export type Category = {
   id: string;
