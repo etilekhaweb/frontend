@@ -1,4 +1,8 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000/api/sb';
+// Prefer explicit env var `VITE_API_BASE_URL` (set this in Cloudflare/Pages or your dev env).
+// If not set, use localhost for local development, otherwise default to the Render backend URL.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  ? 'http://localhost:5000/api/sb'
+  : 'https://backend-4ry8.onrender.com/api/sb');
 
 export type Category = {
   id: string;
