@@ -5,12 +5,28 @@
 // - Otherwise default to Render backend. You can still override with `VITE_API_BASE_URL`.
 const API_CANDIDATES = (() => {
   const env = import.meta.env.VITE_API_BASE_URL;
-  if (env) return [env];
+  // If an env override is provided, use it — except when it points to localhost
+  // but the app is not running locally (e.g., pages.dev). This prevents builds
+  // that accidentally embed a localhost dev URL from breaking production.
+  if (env) {
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname || '';
+      if ((env.startsWith('http://localhost') || env.startsWith('http://127.')) && !(host === 'localhost' || host.startsWith('127.'))) {
+        // ignore a localhost env value when not on localhost
+      } else {
+        return [env];
+      }
+    } else {
+      return [env];
+    }
+  }
   // prefer localhost when running locally
   if (typeof window === 'undefined') return ['https://backend-4ry8.onrender.com/api/sb'];
   const host = window.location.hostname || '';
   if (host === 'localhost' || host.startsWith('127.')) return ['http://localhost:5000/api/sb', 'https://backend-4ry8.onrender.com/api/sb'];
-  // prefer Render for pages and other hosts
+  // If running on Pages (etilekha.pages.dev or any .pages.dev) always use the Render backend only
+  if (host.endsWith('.pages.dev')) return ['https://backend-4ry8.onrender.com/api/sb'];
+  // prefer Render for other hosts, but keep localhost as fallback
   return ['https://backend-4ry8.onrender.com/api/sb', 'http://localhost:5000/api/sb'];
 })();
 
@@ -125,22 +141,41 @@ type OrderPayload = {
 };
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  let response: Response;
+  let lastNetworkError: any = null;
+  const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
 
-  try {
-    response = await fetch(`${ACTIVE_API_BASE}${path}`, options);
-  } catch {
-    throw new Error(`Backend API is not reachable at ${ACTIVE_API_BASE}. Please start the backend server.`);
+  for (const candidate of API_CANDIDATES) {
+    try {
+      if (protocol === 'https:' && candidate.startsWith('http://')) continue;
+      let response: Response;
+      try {
+        response = await fetch(`${candidate}${path}`, options);
+      } catch (networkErr) {
+        lastNetworkError = networkErr;
+        // network-level failure (DNS, refused, CORS, etc.) — try next candidate
+        continue;
+      }
+
+      const data = await response.json().catch(() => null);
+      // mark this candidate as active since network request succeeded
+      ACTIVE_API_BASE = candidate;
+      if (typeof window !== 'undefined') (window as any).__API_BASE_URL__ = ACTIVE_API_BASE;
+
+      if (!response.ok) {
+        const message = data?.error ?? `Request failed (${response.status})`;
+        throw new Error(message);
+      }
+
+      return data as T;
+    } catch (err) {
+      // If an application-level error (HTTP 4xx/5xx) happened, propagate it immediately.
+      // Network errors are handled by the inner try and continue to next candidate.
+      throw err;
+    }
   }
 
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    const message = data?.error ?? 'Request failed';
-    throw new Error(message);
-  }
-
-  return data as T;
+  const tried = API_CANDIDATES.join(', ');
+  throw new Error(`Backend API is not reachable. Tried: ${tried}. ${lastNetworkError ? lastNetworkError.message : ''}`);
 }
 
 export const formatCurrency = (amount: number) =>
