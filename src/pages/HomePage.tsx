@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Clock, Diamond, Sparkles, Users, Heart, Play } from 'lucide-react';
@@ -15,6 +16,7 @@ const HomePage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
     let isMounted = true;
@@ -36,6 +38,19 @@ const HomePage = () => {
       isMounted = false;
     };
   }, []);
+
+  // Scroll when navigated with state.scrollTo (from Navbar)
+  useEffect(() => {
+    const state: any = (location && (location as any).state) || {};
+    const target = state?.scrollTo as string | undefined;
+    if (!target) return;
+    setTimeout(() => {
+      if (target === 'top') return window.scrollTo({ top: 0, behavior: 'smooth' });
+      const id = target === 'category' ? 'category-section' : 'signature-creations';
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+  }, [location]);
 
   const handleAddToCart = (product: Product) => {
     addToCart({
@@ -97,7 +112,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="category-section">
+      <section className="category-section" id="category-section">
         <div className="container">
           <span className="section-subtitle">Our Legacy</span>
           <h2 className="section-title">Shop by Heritage</h2>

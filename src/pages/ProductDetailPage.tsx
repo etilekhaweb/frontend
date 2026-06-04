@@ -140,12 +140,7 @@ const ProductDetailPage = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             />
-            <div className="gallery-badge">
-              <span>{product.isSignature ? 'SIGNATURE' : 'ETILEKHA'}</span>
-              <p style={{ margin: '8px 0 0', fontSize: '0.75rem', maxWidth: '200px', lineHeight: 1.4, color: 'var(--color-text)' }}>
-                Each piece is checked before it reaches your collection.
-              </p>
-            </div>
+            
           </div>
         </div>
 
@@ -201,16 +196,7 @@ const ProductDetailPage = () => {
             </button>
           </div>
 
-          <div className="variations-grid">
-            <div className="variation-box">
-              <span className="var-label">Material</span>
-              <span className="var-value">Artisan Finished</span>
-            </div>
-            <div className="variation-box">
-              <span className="var-label">Category</span>
-              <span className="var-value">{product.category?.name ?? 'Collection Piece'}</span>
-            </div>
-          </div>
+          
         </div>
       </div>
     </motion.div>

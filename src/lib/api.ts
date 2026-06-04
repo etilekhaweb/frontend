@@ -166,6 +166,7 @@ export const api = {
     stock?: number;
     metadata?: any;
   }) => request<any>('/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
+  updateProduct: (id: string, payload: any) => request<any>(`/products/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
   deleteProduct: (id: string) => request<{ success: true }>(`/products/${id}`, { method: 'DELETE' }),
 
   createOrder: (payload: OrderPayload) =>

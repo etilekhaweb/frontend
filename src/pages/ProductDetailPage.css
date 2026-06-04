@@ -76,7 +76,8 @@
 
 /* --- RIGHT SIDE: INFO --- */
 .product-info-section {
-  padding: 3rem 4rem 3rem 0;
+  padding-top: 1.5rem;
+  padding-right: 3rem;
   display: flex;
   flex-direction: column;
 }
@@ -101,7 +102,7 @@
 }
 
 .product-title-large {
-  font-size: 4rem;
+  font-size:  3rem;
   line-height: 1.1;
   margin-bottom: 2rem;
 }
@@ -117,14 +118,14 @@
   font-size: 1.1rem;
   line-height: 1.8;
   color: var(--color-text-muted);
-  margin-bottom: 3rem;
+  margin-bottom: 0.5rem;
 }
 
 .price-section {
   display: flex;
   align-items: baseline;
   gap: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 0.5rem;
 }
 
 .current-price {

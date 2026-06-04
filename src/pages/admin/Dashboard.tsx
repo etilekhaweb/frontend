@@ -58,6 +58,8 @@ const AdminDashboard = () => {
     categoryId: '',
     isSignature: true,
   });
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [existingMainImageUrl, setExistingMainImageUrl] = useState<string | null>(null);
   const [variationGroups, setVariationGroups] = useState<VariationGroupDraft[]>([createGroupDraft()]);
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [secondaryImages, setSecondaryImages] = useState<FileList | null>(null);
@@ -126,7 +128,7 @@ const AdminDashboard = () => {
   const handleCreateProduct = async (event: FormEvent) => {
     event.preventDefault();
     setError('');
-    if (!mainImage) {
+    if (!editingProductId && !mainImage) {
       setError('Main image is required');
       return;
     }
@@ -141,7 +143,7 @@ const AdminDashboard = () => {
         return publicData.publicUrl as string;
       };
 
-      const mainImageUrl = await uploadFile(mainImage, 'products/main');
+      const mainImageUrl = mainImage ? await uploadFile(mainImage, 'products/main') : existingMainImageUrl;
 
       const secondaryUrls: string[] = [];
       if (secondaryImages && secondaryImages.length > 0) {
@@ -187,18 +189,50 @@ const AdminDashboard = () => {
         metadata: {},
       };
 
-      await api.createProduct(payload);
+      if (editingProductId) {
+        await api.updateProduct(editingProductId, payload);
+        flashMessage('Product updated');
+      } else {
+        await api.createProduct(payload);
+        flashMessage('Product saved');
+      }
 
       setProductForm({ name: '', shortDescription: '', description: '', price: '', categoryId: '', isSignature: true });
       setVariationGroups([createGroupDraft()]);
       setMainImage(null);
       setSecondaryImages(null);
-      flashMessage('Product saved');
+      setEditingProductId(null);
+      setExistingMainImageUrl(null);
       await loadData();
     } catch (err) {
       console.error('Create product error', err);
       setError(err instanceof Error ? err.message : 'Could not save product');
     }
+  };
+
+  const startEditProduct = (product: Product) => {
+    setEditingProductId(product.id);
+    setProductForm({
+      name: product.name,
+      shortDescription: product.shortDescription,
+      description: product.description ?? '',
+      price: String(product.price),
+      categoryId: product.categoryId ?? '',
+      isSignature: product.isSignature,
+    });
+    // build variation groups from flat variations
+    const groupsMap: Record<string, any[]> = {};
+    (product.variations || []).forEach((v) => {
+      groupsMap[v.name] = groupsMap[v.name] || [];
+      groupsMap[v.name].push({ id: v.id, value: v.value, priceAdded: String(v.priceAdded ?? 0), image: null, imageUrl: v.imageUrl ?? null });
+    });
+    const groups = Object.keys(groupsMap).length > 0 ? Object.keys(groupsMap).map((name) => ({ id: crypto.randomUUID(), name, options: groupsMap[name] })) : [createGroupDraft()];
+    setVariationGroups(groups);
+    setExistingMainImageUrl(product.mainImage);
+    setMainImage(null);
+    setSecondaryImages(null);
+    // scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const deleteProduct = async (id: string) => {
@@ -496,7 +530,10 @@ const AdminDashboard = () => {
                       <td>{product.name}</td>
                       <td>{formatCurrency(product.price)}</td>
                       <td>{product.category?.name ?? 'Unassigned'}</td>
-                      <td><button className="action-btn danger" onClick={() => deleteProduct(product.id)} type="button">Delete</button></td>
+                        <td style={{ display: 'flex', gap: 8 }}>
+                          <button className="action-btn" onClick={() => startEditProduct(product)} type="button">Edit</button>
+                          <button className="action-btn danger" onClick={() => deleteProduct(product.id)} type="button">Delete</button>
+                        </td>
                     </tr>
                   ))}
                   {products.length === 0 && (

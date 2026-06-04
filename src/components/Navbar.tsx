@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Heart, User, Menu } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import './Navbar.css';
@@ -18,15 +18,33 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const navigate = useNavigate();
+
+  const scrollOrNavigate = (target: 'top' | 'category' | 'collection') => {
+    const doScroll = () => {
+      if (target === 'top') return window.scrollTo({ top: 0, behavior: 'smooth' });
+      const id = target === 'category' ? 'category-section' : 'signature-creations';
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if (location.pathname === '/') {
+      doScroll();
+    } else {
+      navigate('/', { state: { scrollTo: target } });
+    }
+  };
+
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="container nav-container">
         
         {/* Left Links */}
         <div className="nav-links">
-          <Link to="/" className={`nav-link ${location.pathname === '/' ? 'nav-link-active' : ''}`}>Home</Link>
-          <Link to="/collections" className={`nav-link ${location.pathname === '/collections' ? 'nav-link-active' : ''}`}>Collections</Link>
-          <Link to="/heritage" className={`nav-link ${location.pathname === '/heritage' ? 'nav-link-active' : ''}`}>Heritage</Link>
+          <button type="button" className={`nav-link ${location.pathname === '/' ? 'nav-link-active' : ''}`} onClick={() => scrollOrNavigate('top')}>Home</button>
+          <button type="button" className={`nav-link ${location.pathname === '/' ? 'nav-link-active' : ''}`} onClick={() => scrollOrNavigate('category')}>Category</button>
+          <button type="button" className={`nav-link ${location.pathname === '/' ? 'nav-link-active' : ''}`} onClick={() => scrollOrNavigate('collection')}>Collection</button>
         </div>
 
         {/* Center Brand */}
