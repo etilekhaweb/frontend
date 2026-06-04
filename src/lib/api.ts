@@ -3,27 +3,54 @@
 // - If running on `localhost` or `127.*` use local backend `http://localhost:5000/api/sb`
 // - If running on the Pages domain (e.g. `etilekha.pages.dev`) use the Render backend
 // - Otherwise default to Render backend. You can still override with `VITE_API_BASE_URL`.
-const API_BASE_URL = (() => {
+const API_CANDIDATES = (() => {
   const env = import.meta.env.VITE_API_BASE_URL;
-  if (env) return env;
-  if (typeof window === 'undefined') return 'https://backend-4ry8.onrender.com/api/sb';
+  if (env) return [env];
+  // prefer localhost when running locally
+  if (typeof window === 'undefined') return ['https://backend-4ry8.onrender.com/api/sb'];
   const host = window.location.hostname || '';
-  if (host === 'localhost' || host.startsWith('127.')) return 'http://localhost:5000/api/sb';
-  if (host === 'etilekha.pages.dev' || host.endsWith('.pages.dev')) return 'https://backend-4ry8.onrender.com/api/sb';
-  return 'https://backend-4ry8.onrender.com/api/sb';
+  if (host === 'localhost' || host.startsWith('127.')) return ['http://localhost:5000/api/sb', 'https://backend-4ry8.onrender.com/api/sb'];
+  // prefer Render for pages and other hosts
+  return ['https://backend-4ry8.onrender.com/api/sb', 'http://localhost:5000/api/sb'];
 })();
 
-// Runtime debug: expose and log chosen API base for easier diagnosis
-if (typeof window !== 'undefined') {
-  try {
-    // eslint-disable-next-line no-console
-    console.info('[api] API_BASE_URL ->', API_BASE_URL);
-    // expose for quick inspection in console
-    (window as any).__API_BASE_URL__ = API_BASE_URL;
-  } catch (e) {
-    // ignore
+// Active API base used by requests. Start with the first candidate as a best-effort initial value.
+let ACTIVE_API_BASE = API_CANDIDATES[0];
+
+// Probe candidates in order and select the first one that responds to /api/health
+async function probeApiBases() {
+  if (typeof window === 'undefined') return;
+  const protocol = window.location.protocol || 'http:';
+  for (const candidate of API_CANDIDATES) {
+    try {
+      // avoid mixed-content: don't probe http from https page
+      if (protocol === 'https:' && candidate.startsWith('http://')) continue;
+      // derive health URL (candidate may include /api/sb)
+      const base = candidate.replace(/\/api\/sb\/?$/, '');
+      const healthUrl = `${base}/api/health`;
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 1500);
+      const resp = await fetch(healthUrl, { signal: controller.signal });
+      clearTimeout(id);
+      if (resp.ok) {
+        ACTIVE_API_BASE = candidate;
+        // eslint-disable-next-line no-console
+        console.info('[api] selected API_BASE_URL ->', ACTIVE_API_BASE);
+        if (typeof window !== 'undefined') (window as any).__API_BASE_URL__ = ACTIVE_API_BASE;
+        return;
+      }
+    } catch (e) {
+      // probe failed, try next
+    }
   }
+  // if none succeeded, stick with initial candidate and expose it
+  // eslint-disable-next-line no-console
+  console.info('[api] using fallback API_BASE_URL ->', ACTIVE_API_BASE);
+  if (typeof window !== 'undefined') (window as any).__API_BASE_URL__ = ACTIVE_API_BASE;
 }
+
+// start probe in background
+void probeApiBases();
 
 export type Category = {
   id: string;
@@ -101,9 +128,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   let response: Response;
 
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, options);
+    response = await fetch(`${ACTIVE_API_BASE}${path}`, options);
   } catch {
-    throw new Error(`Backend API is not reachable at ${API_BASE_URL}. Please start the backend server.`);
+    throw new Error(`Backend API is not reachable at ${ACTIVE_API_BASE}. Please start the backend server.`);
   }
 
   const data = await response.json().catch(() => null);
