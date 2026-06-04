@@ -163,7 +163,6 @@ export const api = {
     metadata?: any;
   }) => request<any>('/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
   deleteProduct: (id: string) => request<{ success: true }>(`/products/${id}`, { method: 'DELETE' }),
-  deleteProduct: (id: string) => request<{ success: true }>(`/products/${id}`, { method: 'DELETE' }),
 
   createOrder: (payload: OrderPayload) =>
     request<Order>('/orders', {

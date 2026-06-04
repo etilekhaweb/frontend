@@ -358,7 +358,7 @@ const AdminDashboard = () => {
                   </button>
                 </div>
                 <div className="variation-form-list">
-                  {variationGroups.map((group, gIndex) => (
+                  {variationGroups.map((group) => (
                     <div className="variation-group" key={group.id}>
                       <div className="form-row">
                         <div className="form-group">
