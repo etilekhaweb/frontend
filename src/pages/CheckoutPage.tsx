@@ -48,6 +48,7 @@ const CheckoutPage = () => {
         items: cart.map((item) => ({
           productId: item.productId,
           variationId: item.variationId,
+          variationName: item.variationName,
           quantity: item.quantity,
           priceAtOrder: item.price,
         })),

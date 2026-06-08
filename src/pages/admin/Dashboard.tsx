@@ -372,7 +372,7 @@ const AdminDashboard = () => {
                                   {(order.items || []).map((it) => {
                                     const cached = productCache[it.productId] ?? (it.product as Product | null);
                                     const variation = cached?.variations?.find((v) => v.id === it.variationId);
-                                    const variationLabel = variation ? `${variation.name}: ${variation.value}` : (it.variationId ?? '');
+                                    const variationLabel = it.variationName || (variation ? `${variation.name}: ${variation.value}` : (it.variationId ?? ''));
                                     return (
                                       <tr key={it.id}>
                                         <td style={{ padding: '8px 0' }}>

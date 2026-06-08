@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Heart, User, Menu } from 'lucide-react';
+import { Search, Heart, User, Menu, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import './Navbar.css';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { cartCount, setIsCartOpen } = useCart();
   const location = useLocation();
 
@@ -17,6 +19,23 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState<'home' | 'category' | 'collection'>(() => {
@@ -39,6 +58,8 @@ const Navbar = () => {
     if (target === 'category') setActiveNav('category');
     if (target === 'collection') setActiveNav('collection');
 
+    setMobileMenuOpen(false);
+
     if (location.pathname === '/') {
       doScroll();
     } else {
@@ -50,7 +71,7 @@ const Navbar = () => {
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="container nav-container">
         
-        {/* Left Links */}
+        {/* Left Links (desktop only) */}
         <div className="nav-links">
           <button type="button" className={`nav-link ${activeNav === 'home' ? 'nav-link-active' : ''}`} onClick={() => scrollOrNavigate('top')}>Home</button>
           <button type="button" className={`nav-link ${activeNav === 'category' ? 'nav-link-active' : ''}`} onClick={() => scrollOrNavigate('category')}>Category</button>
@@ -80,11 +101,79 @@ const Navbar = () => {
             <User size={20} />
           </Link>
 
-          <button className="btn-icon mobile-menu-btn" aria-label="Menu">
+          <button
+            className="btn-icon mobile-menu-btn"
+            aria-label="Menu"
+            onClick={() => setMobileMenuOpen(true)}
+          >
             <Menu size={24} />
           </button>
         </div>
       </div>
+
+      {/* ===== Mobile Menu ===== */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div
+              className="mobile-menu-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <motion.div
+              className="mobile-menu"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+            >
+              <div className="mobile-menu-header">
+                <h3>Etilekha</h3>
+                <button
+                  className="btn-icon mobile-menu-close"
+                  onClick={() => setMobileMenuOpen(false)}
+                  type="button"
+                  aria-label="Close menu"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="mobile-menu-links">
+                <button
+                  type="button"
+                  className={`mobile-nav-link ${activeNav === 'home' ? 'active' : ''}`}
+                  onClick={() => scrollOrNavigate('top')}
+                >
+                  Home
+                </button>
+                <button
+                  type="button"
+                  className={`mobile-nav-link ${activeNav === 'category' ? 'active' : ''}`}
+                  onClick={() => scrollOrNavigate('category')}
+                >
+                  Category
+                </button>
+                <button
+                  type="button"
+                  className={`mobile-nav-link ${activeNav === 'collection' ? 'active' : ''}`}
+                  onClick={() => scrollOrNavigate('collection')}
+                >
+                  Collection
+                </button>
+                <Link
+                  to="/admin"
+                  className="mobile-nav-link"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Admin Dashboard
+                </Link>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

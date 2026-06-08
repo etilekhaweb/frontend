@@ -125,6 +125,7 @@ export type Order = {
     id: string;
     productId: string;
     variationId?: string | null;
+    variationName?: string | null;
     quantity: number;
     priceAtOrder: number;
     product: Product;
@@ -140,6 +141,7 @@ type OrderPayload = {
   items: Array<{
     productId: string;
     variationId?: string;
+    variationName?: string;
     quantity: number;
     priceAtOrder: number;
   }>;
@@ -280,6 +282,7 @@ export const api = {
         id: it.id,
         productId: it.product_id ?? it.productId,
         variationId: it.variation_id ?? it.variationId ?? null,
+        variationName: it.variation_name ?? it.variationName ?? null,
         quantity: Number(it.quantity),
         priceAtOrder: Number(it.unit_price ?? it.price_at_order ?? it.priceAtOrder ?? 0),
         product: it.product ? {

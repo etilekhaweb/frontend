@@ -25,13 +25,6 @@ const ProductDetailPage = () => {
         if (!isMounted) return;
         setProduct(data);
         setActiveImage(data.mainImage);
-
-        // Initialize selected options: pick first option per variation name
-        const map: Record<string, ProductVariation | null> = {};
-        (data.variations ?? []).forEach((v) => {
-          if (!map[v.name]) map[v.name] = v;
-        });
-        setSelectedOptions(map);
       })
       .catch((err: Error) => {
         if (isMounted) setError(err.message);
@@ -62,10 +55,21 @@ const ProductDetailPage = () => {
     return Object.keys(groups).map((name) => ({ name, options: groups[name] }));
   }, [product]);
 
-  const galleryImages = useMemo(() => {
-    if (!product) return [];
-    return [product.mainImage, ...product.images.map((image) => image.url)];
-  }, [product]);
+    const galleryImages = useMemo(() => {
+      if (!product) return [];
+      const imgs: string[] = [product.mainImage];
+      if (product.images?.length) {
+        imgs.push(...product.images.map((img) => img.url));
+      }
+      if (product.variations?.length) {
+        product.variations.forEach((v) => {
+          if (v.imageUrl) imgs.push(v.imageUrl);
+        });
+      }
+      return Array.from(new Set(imgs));
+    }, [product]);
+
+
 
   const finalPrice = product
     ? product.price + Object.values(selectedOptions).reduce((sum, opt) => sum + (opt?.priceAdded ?? 0), 0)
