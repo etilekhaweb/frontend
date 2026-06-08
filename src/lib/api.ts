@@ -4,7 +4,8 @@
 // - If running on the Pages domain (e.g. `etilekha.pages.dev`) use the Render backend
 // - Otherwise default to Render backend. You can still override with `VITE_API_BASE_URL`.
 const API_CANDIDATES = (() => {
-  const env = import.meta.env.VITE_API_BASE_URL;
+  const rawEnv = import.meta.env.VITE_API_BASE_URL;
+  const env = typeof rawEnv === 'string' ? rawEnv.trim() : rawEnv;
   // If an env override is provided, use it — except when it points to localhost
   // but the app is not running locally (e.g., pages.dev). This prevents builds
   // that accidentally embed a localhost dev URL from breaking production.
@@ -30,14 +31,18 @@ const API_CANDIDATES = (() => {
   return ['https://backend-4ry8.onrender.com/api/sb', 'http://localhost:5000/api/sb'];
 })();
 
-// Active API base used by requests. Start with the first candidate as a best-effort initial value.
-let ACTIVE_API_BASE = API_CANDIDATES[0];
+// Normalize candidates (trim whitespace) to avoid malformed URLs like "%20" when envs contain spaces
+const NORMALIZED_API_CANDIDATES = API_CANDIDATES.map((c) => String(c).trim()).filter(Boolean);
+
+// Active API base used by requests. Start with the first normalized candidate as a best-effort initial value.
+let ACTIVE_API_BASE = NORMALIZED_API_CANDIDATES[0] ?? API_CANDIDATES[0];
 
 // Probe candidates in order and select the first one that responds to /api/health
 async function probeApiBases() {
   if (typeof window === 'undefined') return;
   const protocol = window.location.protocol || 'http:';
-  for (const candidate of API_CANDIDATES) {
+  for (const candidateRaw of NORMALIZED_API_CANDIDATES) {
+    const candidate = String(candidateRaw).trim();
     try {
       // avoid mixed-content: don't probe http from https page
       if (protocol === 'https:' && candidate.startsWith('http://')) continue;
@@ -144,7 +149,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   let lastNetworkError: any = null;
   const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
 
-  for (const candidate of API_CANDIDATES) {
+  for (const candidateRaw of NORMALIZED_API_CANDIDATES) {
+    const candidate = String(candidateRaw).trim();
     try {
       if (protocol === 'https:' && candidate.startsWith('http://')) continue;
       let response: Response;
@@ -174,7 +180,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     }
   }
 
-  const tried = API_CANDIDATES.join(', ');
+  const tried = NORMALIZED_API_CANDIDATES.join(', ');
   throw new Error(`Backend API is not reachable. Tried: ${tried}. ${lastNetworkError ? lastNetworkError.message : ''}`);
 }
 

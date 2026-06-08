@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { api, formatCurrency } from '../lib/api';
+import CheckoutItem from '../components/CheckoutItem';
 import './CheckoutPage.css';
 
 const getGuestDeviceId = () => {
@@ -22,19 +23,12 @@ const CheckoutPage = () => {
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
+    name: '',
     phone: '',
     address: '',
-    city: '',
-    postalCode: '',
   });
 
-  const shippingAddress = useMemo(
-    () => [formData.address, formData.city, formData.postalCode].filter(Boolean).join(', '),
-    [formData.address, formData.city, formData.postalCode],
-  );
+  const shippingAddress = formData.address;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -48,8 +42,7 @@ const CheckoutPage = () => {
     try {
       await api.createOrder({
         guestDeviceId: getGuestDeviceId(),
-        customerName: `${formData.firstName} ${formData.lastName}`.trim(),
-        customerEmail: formData.email,
+        customerName: formData.name,
         customerPhone: formData.phone,
         shippingAddress,
         items: cart.map((item) => ({
@@ -92,17 +85,7 @@ const CheckoutPage = () => {
           <h2 className="summary-title">Order Summary</h2>
           <div className="summary-items">
             {cart.map((item) => (
-              <div key={`${item.productId}-${item.variationId || 'base'}`} className="summary-item">
-                <img src={item.image} alt={item.name} className="summary-img" />
-                <div className="summary-details">
-                  <h4 className="summary-item-name">{item.name}</h4>
-                  {item.variationName && <p className="summary-item-var">{item.variationName}</p>}
-                  <p className="summary-item-var">Qty: {item.quantity}</p>
-                </div>
-                <div className="summary-item-price">
-                  {formatCurrency(item.price * item.quantity)}
-                </div>
-              </div>
+              <CheckoutItem key={`${item.productId}-${item.variationId || 'base'}`} item={item} />
             ))}
           </div>
 
@@ -125,20 +108,9 @@ const CheckoutPage = () => {
         <div className="checkout-form-section">
           <h2>Customer Details</h2>
           <form onSubmit={handleConfirm}>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">First Name</label>
-                <input required type="text" name="firstName" className="form-input" value={formData.firstName} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Last Name</label>
-                <input required type="text" name="lastName" className="form-input" value={formData.lastName} onChange={handleChange} />
-              </div>
-            </div>
-
             <div className="form-group">
-              <label className="form-label">Email Address</label>
-              <input required type="email" name="email" className="form-input" value={formData.email} onChange={handleChange} />
+              <label className="form-label">Full Name</label>
+              <input required type="text" name="name" className="form-input" value={formData.name} onChange={handleChange} />
             </div>
 
             <div className="form-group">
@@ -149,17 +121,6 @@ const CheckoutPage = () => {
             <div className="form-group">
               <label className="form-label">Shipping Address</label>
               <input required type="text" name="address" className="form-input" value={formData.address} onChange={handleChange} />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">City / State</label>
-                <input required type="text" name="city" className="form-input" value={formData.city} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Postal Code</label>
-                <input required type="text" name="postalCode" className="form-input" value={formData.postalCode} onChange={handleChange} />
-              </div>
             </div>
 
             {error && <p className="form-error">{error}</p>}

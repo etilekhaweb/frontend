@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api, formatCurrency } from '../../lib/api';
 import supabase from '../../lib/supabaseClient';
@@ -46,6 +46,8 @@ const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
+  const [productCache, setProductCache] = useState<Record<string, Product | null>>({});
 
   const [categoryName, setCategoryName] = useState('');
   const [categoryImage, setCategoryImage] = useState<File | null>(null);
@@ -268,6 +270,22 @@ const AdminDashboard = () => {
     }
   };
 
+  const toggleExpand = async (orderId: string) => {
+    setExpandedOrders((prev) => (prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]));
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+    for (const it of order.items || []) {
+      if (it.variationId && !productCache[it.productId]) {
+        try {
+          const p = await api.getProduct(it.productId);
+          setProductCache((prev) => ({ ...prev, [p.id]: p }));
+        } catch (err) {
+          // ignore
+        }
+      }
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       <div className="admin-sidebar">
@@ -311,22 +329,74 @@ const AdminDashboard = () => {
               </thead>
               <tbody>
                 {orders.map((order) => (
-                  <tr key={order.id}>
-                    <td>#{order.id.slice(0, 8)}</td>
-                    <td>{order.customerName}<br /><span>{order.customerPhone}</span></td>
-                    <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                    <td>{formatCurrency(order.totalAmount)}</td>
-                    <td><span className={`status-badge status-${order.status.toLowerCase()}`}>{order.status}</span></td>
-                    <td>
-                      <select
-                        className="admin-select"
-                        value={order.status}
-                        onChange={(event) => updateStatus(order.id, event.target.value as OrderStatus)}
-                      >
-                        {ORDER_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
-                      </select>
-                    </td>
-                  </tr>
+                  <React.Fragment key={order.id}>
+                    <tr>
+                      <td>
+                        <button className="action-btn" type="button" onClick={() => toggleExpand(order.id)}>
+                          {expandedOrders.includes(order.id) ? '−' : '+'}
+                        </button>
+                        <span style={{ marginLeft: 8 }}>#{order.id.slice(0, 8)}</span>
+                      </td>
+                      <td>{order.customerName}<br /><span>{order.customerPhone}</span></td>
+                      <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                      <td>{formatCurrency(order.totalAmount)}</td>
+                      <td><span className={`status-badge status-${order.status.toLowerCase()}`}>{order.status}</span></td>
+                      <td>
+                        <select
+                          className="admin-select"
+                          value={order.status}
+                          onChange={(event) => updateStatus(order.id, event.target.value as OrderStatus)}
+                        >
+                          {ORDER_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                        </select>
+                      </td>
+                    </tr>
+
+                    {expandedOrders.includes(order.id) && (
+                      <tr>
+                        <td colSpan={6}>
+                          <div style={{ padding: '1rem 0' }}>
+                            <strong>Customer:</strong> {order.customerName} — {order.customerPhone}<br />
+                            <strong>Shipping Address:</strong> {order.shippingAddress}
+                            <div style={{ marginTop: '0.75rem' }}>
+                              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                  <tr>
+                                    <th style={{ textAlign: 'left' }}>Product</th>
+                                    <th>Variant</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {(order.items || []).map((it) => {
+                                    const cached = productCache[it.productId] ?? (it.product as Product | null);
+                                    const variation = cached?.variations?.find((v) => v.id === it.variationId);
+                                    const variationLabel = variation ? `${variation.name}: ${variation.value}` : (it.variationId ?? '');
+                                    return (
+                                      <tr key={it.id}>
+                                        <td style={{ padding: '8px 0' }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <img src={cached?.mainImage ?? ''} alt={cached?.name ?? ''} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />
+                                            <div>
+                                              <div>{cached?.name ?? it.productId}</div>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td style={{ textAlign: 'center' }}>{variationLabel}</td>
+                                        <td style={{ textAlign: 'center' }}>{it.quantity}</td>
+                                        <td style={{ textAlign: 'center' }}>{formatCurrency(it.priceAtOrder)}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
                 {orders.length === 0 && (
                   <tr><td colSpan={6}>No orders yet.</td></tr>

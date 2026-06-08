@@ -16,6 +16,7 @@ interface CartContextType {
   addToCart: (item: CartItem) => void;
   removeFromCart: (productId: string, variationId?: string) => void;
   updateQuantity: (productId: string, quantity: number, variationId?: string) => void;
+  updateItemVariation: (productId: string, oldVariationId: string | undefined, newVariationId: string | undefined, newVariationName: string, newPrice: number, newImage: string, newName: string) => void;
   clearCart: () => void;
   cartTotal: number;
   cartCount: number;
@@ -31,7 +32,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!saved) return [];
 
     try {
-      return JSON.parse(saved) as CartItem[];
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       console.error('Failed to parse cart');
       return [];
@@ -79,6 +81,43 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ));
   };
 
+  const updateItemVariation = (
+    productId: string, 
+    oldVariationId: string | undefined, 
+    newVariationId: string | undefined,
+    newVariationName: string,
+    newPrice: number,
+    newImage: string,
+    newName: string
+  ) => {
+    setCart(prev => {
+      const existingItem = prev.find(item => item.productId === productId && item.variationId === oldVariationId);
+      if (!existingItem) return prev;
+
+      const targetItemIndex = prev.findIndex(item => item.productId === productId && item.variationId === newVariationId);
+      
+      if (targetItemIndex !== -1 && prev[targetItemIndex] !== existingItem) {
+        // Merge with existing target
+        return prev.map((item, index) => {
+          if (index === targetItemIndex) {
+            return { ...item, quantity: item.quantity + existingItem.quantity };
+          }
+          if (item === existingItem) {
+            return null as unknown as CartItem; // Will filter out
+          }
+          return item;
+        }).filter(Boolean);
+      } else {
+        // Just update the item in place
+        return prev.map(item => 
+          item.productId === productId && item.variationId === oldVariationId
+            ? { ...item, variationId: newVariationId, variationName: newVariationName, price: newPrice, image: newImage, name: newName }
+            : item
+        );
+      }
+    });
+  };
+
   const clearCart = () => setCart([]);
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -86,7 +125,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <CartContext.Provider value={{
-      cart, addToCart, removeFromCart, updateQuantity, clearCart,
+      cart, addToCart, removeFromCart, updateQuantity, updateItemVariation, clearCart,
       cartTotal, cartCount, isCartOpen, setIsCartOpen
     }}>
       {children}
