@@ -3,11 +3,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Heart, User, Menu, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCart } from '../context/CartContext';
+import SearchModal from './SearchModal';
 import './Navbar.css';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { cartCount, setIsCartOpen } = useCart();
   const location = useLocation();
 
@@ -86,7 +88,12 @@ const Navbar = () => {
 
         {/* Right Actions */}
         <div className="nav-actions">
-          <button className="btn-icon" aria-label="Search">
+          <button 
+            className="btn-icon" 
+            aria-label="Search"
+            onClick={() => setIsSearchOpen(true)}
+            type="button"
+          >
             <Search size={20} />
           </button>
           
@@ -174,6 +181,9 @@ const Navbar = () => {
           </>
         )}
       </AnimatePresence>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </nav>
   );
 };

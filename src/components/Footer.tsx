@@ -13,7 +13,7 @@ const Footer = () => {
               <h2>Etilekha</h2>
             </Link>
             <p>
-              Preserving the timeless craft of Indian jewelry making since 1924. Every piece is a testament to our commitment to excellence and heritage.
+              Every piece is a testament to our commitment to excellence and heritage.
             </p>
           </div>
 
@@ -46,14 +46,14 @@ const Footer = () => {
               </li>
               <li>
                 <MapPin size={16} color="var(--color-accent)" />
-                <span>Flagship Store: Mehrauli, New Delhi</span>
+                <span>Head Office: House 40 Road 21 Sector 14,Uttara, Dhaka</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="footer-bottom">
-          <p>Copyright 2024 ETILEKHA BANGLES. CRAFTED IN INDIA.</p>
+          <p>Copyright 2026 ETILEKHA BANGLES. CRAFTED IN Bangladesh.</p>
           <div className="footer-links">
             <Link to="/privacy-policy">Privacy Policy</Link>
             <Link to="/terms-of-service">Terms of Service</Link>

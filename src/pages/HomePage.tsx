@@ -1,22 +1,21 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Clock, Diamond, Sparkles, Users, Heart, Play } from 'lucide-react';
-import { useCart } from '../context/CartContext';
+import { ArrowRight, Clock, Diamond, Sparkles, Users } from 'lucide-react';
 import { api, formatCurrency } from '../lib/api';
 import type { Category, Product } from '../lib/api';
 import './HomePage.css';
+import ProductCard from '../components/ProductCard';
 
 const CATEGORY_ICONS = [Clock, Diamond, Sparkles, Users];
 
 const HomePage = () => {
-  const { addToCart } = useCart();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
@@ -52,15 +51,7 @@ const HomePage = () => {
     }, 150);
   }, [location]);
 
-  const handleAddToCart = (product: Product) => {
-    addToCart({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.mainImage,
-    });
-  };
+  // product card add-to-cart handled by `ProductCard` component
 
   return (
     <motion.div
@@ -92,7 +83,7 @@ const HomePage = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            <span className="hero-subtitle">Est. 1924 - Handcrafted</span>
+            <span className="hero-subtitle">Est. 2025 - Handcrafted</span>
             <h1 className="hero-title">
               Legacy in <span className="hero-title-accent">Every Curve.</span>
             </h1>
@@ -104,9 +95,7 @@ const HomePage = () => {
               <a className="btn-primary" href="#signature-creations">
                 View Collection <ArrowRight size={18} />
               </a>
-              <button className="btn-video" type="button">
-                <Play size={20} className="play-icon" /> The Craft Video
-              </button>
+
             </div>
           </motion.div>
         </div>
@@ -138,6 +127,9 @@ const HomePage = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: idx * 0.1 }}
+                  onClick={() => navigate(`/category/${category.id}`)}
+                  role="button"
+                  tabIndex={0}
                 >
                   <img
                     src={category.imageUrl || 'https://images.unsplash.com/photo-1599643478524-fb66f70a00ea?auto=format&fit=crop&q=80&w=800'}
@@ -174,36 +166,12 @@ const HomePage = () => {
             {products.map((product, idx) => (
               <motion.div
                 key={product.id}
-                className="product-card"
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
               >
-                <Link to={`/product/${product.id}`} className="product-image-container">
-                  <span className="product-badge">{product.isSignature ? 'Signature' : 'New Arrival'}</span>
-                  <img src={product.mainImage} alt={product.name} className="product-image" />
-                </Link>
-                <div className="product-info" style={{ textAlign: 'left' }}>
-                  <div className="product-header">
-                    <Link to={`/product/${product.id}`}>
-                      <h3 className="product-title">{product.name}</h3>
-                    </Link>
-                    <span className="product-price">{formatCurrency(product.price)}</span>
-                  </div>
-                  <p className="product-desc">{product.shortDescription}</p>
-                  <div className="product-footer">
-                    <span className="product-auth">Authenticity Guaranteed</span>
-                    <button
-                      className="btn-icon btn-add-cart"
-                      aria-label="Add to cart"
-                      onClick={() => handleAddToCart(product)}
-                      type="button"
-                    >
-                      <Heart size={20} />
-                    </button>
-                  </div>
-                </div>
+                <ProductCard product={product} />
               </motion.div>
             ))}
           </div>
