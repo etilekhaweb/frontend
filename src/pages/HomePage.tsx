@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Clock, Diamond, Sparkles, Users } from 'lucide-react';
-import { api, formatCurrency } from '../lib/api';
+import { api } from '../lib/api';
 import type { Category, Product } from '../lib/api';
 import './HomePage.css';
 import ProductCard from '../components/ProductCard';

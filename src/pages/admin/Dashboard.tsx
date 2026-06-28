@@ -4,6 +4,7 @@ import { api, formatCurrency } from '../../lib/api';
 import supabase from '../../lib/supabaseClient';
 import type { Category, Order, OrderStatus, Product } from '../../lib/api';
 import './Admin.css';
+import { AdminLogin } from './AdminLogin';
  
 const STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_BUCKET ?? 'uploads';
 
@@ -39,6 +40,9 @@ const createGroupDraft = (): VariationGroupDraft => ({
 });
 
 const AdminDashboard = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem('admin_token') === 'etilekha_authenticated';
+  });
   const [activeTab, setActiveTab] = useState<AdminTab>('orders');
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -286,6 +290,10 @@ const AdminDashboard = () => {
     }
   };
 
+  if (!isLoggedIn) {
+    return <AdminLogin onLoginSuccess={() => setIsLoggedIn(true)} />;
+  }
+
   return (
     <div className="admin-dashboard">
       <div className="admin-sidebar">
@@ -301,6 +309,17 @@ const AdminDashboard = () => {
               {tab === 'settings' ? 'Site Settings' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
+          <button
+            className="admin-nav-item"
+            onClick={() => {
+              localStorage.removeItem('admin_token');
+              setIsLoggedIn(false);
+            }}
+            type="button"
+            style={{ marginTop: 'auto', color: '#ffb4a8', borderLeftColor: 'transparent' }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 

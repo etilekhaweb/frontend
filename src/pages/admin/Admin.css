@@ -9,6 +9,8 @@
   background-color: var(--color-primary-dark);
   border-right: 1px solid var(--color-border);
   padding: 2rem 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-sidebar h3 {
@@ -21,6 +23,7 @@
 .admin-nav {
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .admin-nav-item {
@@ -264,3 +267,201 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==================== ADMIN LOGIN ==================== */
+.admin-login-wrapper {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-color: var(--color-primary-dark);
+  padding: 2rem 1rem;
+  overflow: hidden;
+}
+
+.login-bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(78, 14, 24, 0.4) 0%, rgba(20, 3, 5, 0.9) 100%);
+  z-index: 1;
+}
+
+.admin-login-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 420px;
+  background: rgba(78, 14, 24, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 2.5rem 2rem;
+  box-shadow: var(--shadow-lg), var(--shadow-gold);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.admin-login-card:hover {
+  box-shadow: var(--shadow-lg), 0 0 25px rgba(212, 175, 55, 0.4);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-logo-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+.gold-icon {
+  color: var(--color-accent);
+}
+
+.login-header h2 {
+  font-family: var(--font-serif);
+  color: var(--color-text);
+  font-size: 1.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.login-header p {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.login-error-alert {
+  background: rgba(255, 180, 168, 0.1);
+  border: 1px solid #ffb4a8;
+  color: #ffb4a8;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.login-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.login-input-group label {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+.input-with-icon input {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input-with-icon input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 14px;
+  color: var(--color-text-muted);
+  opacity: 0.7;
+  transition: opacity 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle-btn:hover {
+  opacity: 1;
+  color: var(--color-accent);
+}
+
+.login-submit-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  height: 48px;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+}
+
+.login-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(58, 8, 16, 0.3);
+  border-top-color: var(--color-primary-dark);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Shake Animation */
+.admin-login-card.shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+@media (max-width: 480px) {
+  .admin-login-card {
+    padding: 2rem 1.5rem;
+  }
+}
+
