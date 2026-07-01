@@ -8,7 +8,9 @@ import { AdminLogin } from './AdminLogin';
  
 const STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_BUCKET ?? 'uploads';
 
-type AdminTab = 'orders' | 'products' | 'categories' | 'settings';
+import { AdminSummary } from './AdminSummary';
+
+type AdminTab = 'summary' | 'orders' | 'products' | 'categories' | 'settings';
 type OptionDraft = {
   id: string;
   value: string;
@@ -43,7 +45,7 @@ const AdminDashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem('admin_token') === 'etilekha_authenticated';
   });
-  const [activeTab, setActiveTab] = useState<AdminTab>('orders');
+  const [activeTab, setActiveTab] = useState<AdminTab>('summary');
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -299,7 +301,7 @@ const AdminDashboard = () => {
       <div className="admin-sidebar">
         <h3>Admin Panel</h3>
         <div className="admin-nav">
-          {(['orders', 'products', 'categories', 'settings'] as AdminTab[]).map((tab) => (
+          {(['summary', 'orders', 'products', 'categories', 'settings'] as AdminTab[]).map((tab) => (
             <button
               key={tab}
               className={`admin-nav-item ${activeTab === tab ? 'active' : ''}`}
@@ -332,6 +334,10 @@ const AdminDashboard = () => {
         {message && <p className="admin-message">{message}</p>}
         {error && <p className="admin-error">{error}</p>}
         {isLoading && <p className="admin-muted">Loading admin data...</p>}
+
+        {!isLoading && activeTab === 'summary' && (
+          <AdminSummary orders={orders} />
+        )}
 
         {!isLoading && activeTab === 'orders' && (
           <div className="admin-table-container">
