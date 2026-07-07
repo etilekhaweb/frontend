@@ -203,7 +203,7 @@ export const AdminSummary: React.FC<AdminSummaryProps> = ({ orders }) => {
                 <Tooltip
                    contentStyle={{ backgroundColor: 'rgba(20,3,5,0.9)', backdropFilter: 'blur(10px)', borderColor: 'var(--color-border)', borderRadius: '8px', color: 'var(--color-text)', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
                    itemStyle={{ color: 'var(--color-accent)', fontWeight: 'bold' }}
-                   formatter={(value: number) => [formatCurrency(value), 'Sales']}
+                   formatter={(value: any) => [formatCurrency(Number(value ?? 0)), 'Sales']}
                 />
                 <Area type="monotone" dataKey="sales" stroke="var(--color-accent)" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" animationDuration={1000} />
               </AreaChart>

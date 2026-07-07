@@ -53,6 +53,7 @@ const AdminDashboard = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
+  const [orderFilter, setOrderFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const [productCache, setProductCache] = useState<Record<string, Product | null>>({});
 
   const [categoryName, setCategoryName] = useState('');
@@ -339,97 +340,177 @@ const AdminDashboard = () => {
           <AdminSummary orders={orders} />
         )}
 
-        {!isLoading && activeTab === 'orders' && (
-          <div className="admin-table-container">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Date</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <React.Fragment key={order.id}>
-                    <tr>
-                      <td>
-                        <button className="action-btn" type="button" onClick={() => toggleExpand(order.id)}>
-                          {expandedOrders.includes(order.id) ? '−' : '+'}
-                        </button>
-                        <span style={{ marginLeft: 8 }}>#{order.id.slice(0, 8)}</span>
-                      </td>
-                      <td>{order.customerName}<br /><span>{order.customerPhone}</span></td>
-                      <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                      <td>{formatCurrency(order.totalAmount)}</td>
-                      <td><span className={`status-badge status-${order.status.toLowerCase()}`}>{order.status}</span></td>
-                      <td>
-                        <select
-                          className="admin-select"
-                          value={order.status}
-                          onChange={(event) => updateStatus(order.id, event.target.value as OrderStatus)}
-                        >
-                          {ORDER_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
-                        </select>
-                      </td>
-                    </tr>
+        {!isLoading && activeTab === 'orders' && (() => {
+          const pendingOrders = orders.filter(o => o.status === 'PENDING');
+          const approvedOrders = orders.filter(o => o.status === 'APPROVED');
+          const deliveredOrders = orders.filter(o => o.status === 'DELIVERED');
+          const cancelledOrders = orders.filter(o => o.status === 'CANCELLED');
 
-                    {expandedOrders.includes(order.id) && (
+          const filteredOrders = orderFilter === 'ALL' ? orders : orders.filter(o => o.status === orderFilter);
+
+          return (
+          <div>
+            <div className="order-status-boxes">
+              <div
+                className={`order-status-box status-box-pending ${orderFilter === 'PENDING' ? 'active' : ''}`}
+                onClick={() => setOrderFilter(orderFilter === 'PENDING' ? 'ALL' : 'PENDING')}
+                role="button"
+                tabIndex={0}
+              >
+                <div className="status-box-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+                <div className="status-box-info">
+                  <span className="status-box-count">{pendingOrders.length}</span>
+                  <span className="status-box-label">Pending</span>
+                </div>
+              </div>
+              <div
+                className={`order-status-box status-box-approved ${orderFilter === 'APPROVED' ? 'active' : ''}`}
+                onClick={() => setOrderFilter(orderFilter === 'APPROVED' ? 'ALL' : 'APPROVED')}
+                role="button"
+                tabIndex={0}
+              >
+                <div className="status-box-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div className="status-box-info">
+                  <span className="status-box-count">{approvedOrders.length}</span>
+                  <span className="status-box-label">Approved</span>
+                </div>
+              </div>
+              <div
+                className={`order-status-box status-box-delivered ${orderFilter === 'DELIVERED' ? 'active' : ''}`}
+                onClick={() => setOrderFilter(orderFilter === 'DELIVERED' ? 'ALL' : 'DELIVERED')}
+                role="button"
+                tabIndex={0}
+              >
+                <div className="status-box-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                </div>
+                <div className="status-box-info">
+                  <span className="status-box-count">{deliveredOrders.length}</span>
+                  <span className="status-box-label">Delivered</span>
+                </div>
+              </div>
+              <div
+                className={`order-status-box status-box-cancelled ${orderFilter === 'CANCELLED' ? 'active' : ''}`}
+                onClick={() => setOrderFilter(orderFilter === 'CANCELLED' ? 'ALL' : 'CANCELLED')}
+                role="button"
+                tabIndex={0}
+              >
+                <div className="status-box-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                </div>
+                <div className="status-box-info">
+                  <span className="status-box-count">{cancelledOrders.length}</span>
+                  <span className="status-box-label">Cancelled</span>
+                </div>
+              </div>
+            </div>
+
+            {orderFilter !== 'ALL' && (
+              <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span className={`status-badge status-${orderFilter.toLowerCase()}`}>{orderFilter}</span>
+                <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+                  Showing {filteredOrders.length} of {orders.length} orders
+                </span>
+                <button className="action-btn" type="button" onClick={() => setOrderFilter('ALL')} style={{ marginLeft: 'auto' }}>Show All</button>
+              </div>
+            )}
+
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrders.map((order) => (
+                    <React.Fragment key={order.id}>
                       <tr>
-                        <td colSpan={6}>
-                          <div style={{ padding: '1rem 0' }}>
-                            <strong>Customer:</strong> {order.customerName} — {order.customerPhone}<br />
-                            <strong>Shipping Address:</strong> {order.shippingAddress}
-                            <div style={{ marginTop: '0.75rem' }}>
-                              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                <thead>
-                                  <tr>
-                                    <th style={{ textAlign: 'left' }}>Product</th>
-                                    <th>Variant</th>
-                                    <th>Qty</th>
-                                    <th>Price</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {(order.items || []).map((it) => {
-                                    const cached = productCache[it.productId] ?? (it.product as Product | null);
-                                    const variation = cached?.variations?.find((v) => v.id === it.variationId);
-                                    const variationLabel = it.variationName || (variation ? `${variation.name}: ${variation.value}` : (it.variationId ?? ''));
-                                    return (
-                                      <tr key={it.id}>
-                                        <td style={{ padding: '8px 0' }}>
-                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                            <img src={cached?.mainImage ?? ''} alt={cached?.name ?? ''} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />
-                                            <div>
-                                              <div>{cached?.name ?? it.productId}</div>
-                                            </div>
-                                          </div>
-                                        </td>
-                                        <td style={{ textAlign: 'center' }}>{variationLabel}</td>
-                                        <td style={{ textAlign: 'center' }}>{it.quantity}</td>
-                                        <td style={{ textAlign: 'center' }}>{formatCurrency(it.priceAtOrder)}</td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
+                        <td>
+                          <button className="action-btn" type="button" onClick={() => toggleExpand(order.id)}>
+                            {expandedOrders.includes(order.id) ? '−' : '+'}
+                          </button>
+                          <span style={{ marginLeft: 8 }}>#{order.id.slice(0, 8)}</span>
+                        </td>
+                        <td>{order.customerName}<br /><span>{order.customerPhone}</span></td>
+                        <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td>{formatCurrency(order.totalAmount)}</td>
+                        <td><span className={`status-badge status-${order.status.toLowerCase()}`}>{order.status}</span></td>
+                        <td>
+                          <select
+                            className="admin-select"
+                            value={order.status}
+                            onChange={(event) => updateStatus(order.id, event.target.value as OrderStatus)}
+                          >
+                            {ORDER_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                          </select>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-                {orders.length === 0 && (
-                  <tr><td colSpan={6}>No orders yet.</td></tr>
-                )}
-              </tbody>
-            </table>
+
+                      {expandedOrders.includes(order.id) && (
+                        <tr>
+                          <td colSpan={6}>
+                            <div style={{ padding: '1rem 0' }}>
+                              <strong>Customer:</strong> {order.customerName} — {order.customerPhone}<br />
+                              <strong>Shipping Address:</strong> {order.shippingAddress}
+                              <div style={{ marginTop: '0.75rem' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                  <thead>
+                                    <tr>
+                                      <th style={{ textAlign: 'left' }}>Product</th>
+                                      <th>Variant</th>
+                                      <th>Qty</th>
+                                      <th>Price</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {(order.items || []).map((it) => {
+                                      const cached = productCache[it.productId] ?? (it.product as Product | null);
+                                      const variation = cached?.variations?.find((v) => v.id === it.variationId);
+                                      const variationLabel = it.variationName || (variation ? `${variation.name}: ${variation.value}` : (it.variationId ?? ''));
+                                      return (
+                                        <tr key={it.id}>
+                                          <td style={{ padding: '8px 0' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                              <img src={cached?.mainImage ?? ''} alt={cached?.name ?? ''} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />
+                                              <div>
+                                                <div>{cached?.name ?? it.productId}</div>
+                                              </div>
+                                            </div>
+                                          </td>
+                                          <td style={{ textAlign: 'center' }}>{variationLabel}</td>
+                                          <td style={{ textAlign: 'center' }}>{it.quantity}</td>
+                                          <td style={{ textAlign: 'center' }}>{formatCurrency(it.priceAtOrder)}</td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                  {filteredOrders.length === 0 && (
+                    <tr><td colSpan={6}>No orders found.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        )}
+          );
+        })()}
 
         {!isLoading && activeTab === 'products' && (
           <>

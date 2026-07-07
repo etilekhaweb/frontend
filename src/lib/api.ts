@@ -275,7 +275,7 @@ export const api = {
       customerEmail: o.customer_email ?? o.customerEmail ?? null,
       customerPhone: o.customer_phone ?? o.customerPhone ?? '',
       shippingAddress: o.shipping_address ?? o.shippingAddress ?? '',
-      totalAmount: Number(o.total_amount ?? o.totalAmount ?? 0),
+      totalAmount: Number(o.total ?? o.total_amount ?? o.totalAmount ?? o.subtotal ?? 0),
       status: (o.status ?? 'PENDING') as OrderStatus,
       createdAt: o.created_at ?? o.createdAt,
       items: (o.order_item ?? o.items ?? []).map((it: any) => ({
